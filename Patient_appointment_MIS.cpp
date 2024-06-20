@@ -258,15 +258,6 @@ public:
         }
         return true;
     }
-// if patient and doctor exist add appointment
-    void addAppointment(int appointment_id, int patient_id, int doctor_id, string appointment_date, PatientsList& patientsList, DoctorsList& doctorsList) {
-        if (!checkPatientAndDoctorExistence(patient_id, doctor_id, patientsList, doctorsList)) {
-            return;
-        }
-        auto* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
-        addAppointment(appointment);
-        saveAppointmentToFile(appointment);
-    }
     // add appointment to the list
     void addAppointment(Appointments* appointment) {
         if (head == nullptr) {
@@ -279,7 +270,7 @@ public:
         }
         temp->next = appointment;
     }
-  // save created appointment to the file 
+    // save created appointment to the file
     void saveAppointmentToFile(Appointments* appointment) {
         ofstream outfile;
         outfile.open("appointments.txt", ios::app);
@@ -292,6 +283,16 @@ public:
         outfile.close();
         cout << "Appointment saved successfully" << endl;
     }
+// if patient and doctor exist add appointment
+    void addAppointment(int appointment_id, int patient_id, int doctor_id, string appointment_date, PatientsList& patientsList, DoctorsList& doctorsList) {
+        if (!checkPatientAndDoctorExistence(patient_id, doctor_id, patientsList, doctorsList)) {
+            cerr << "Appointment not created. Patient or doctor does not exist." << endl;
+        }
+        auto* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
+        addAppointment(appointment);
+        saveAppointmentToFile(appointment);
+    }
+
     // read appointment data from the file
     void readAppointmentDataFromFile() {
         ifstream infile;
