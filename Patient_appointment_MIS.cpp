@@ -1,12 +1,8 @@
-//
-// Created by User on 20/06/2024.
-//
-//
-// Created by User on 20/06/2024.
-//
+
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 
 using namespace std;
@@ -63,9 +59,9 @@ public:
 
         void setPatientId(PatientsLL * patient_id) { this->patient_id = patient_id; }
         void setDoctorId(DoctorsLL * doctor_id) { this->doctor_id = doctor_id; }
-            
+
         };
-        
+
 
 class PatientsList {
 public:
@@ -85,6 +81,7 @@ public:
     }
 
 // add patient
+    // add patient
     void addPatient(PatientsLL* patient) {
         if (head == nullptr) {
             head = patient;
@@ -96,45 +93,52 @@ public:
             temp->next = patient;
         }
     }
+
     // save created patient to the file
     void savePatientToFile(PatientsLL* patient) {
         ofstream outfile;
         outfile.open("patients.txt", ios::app);
-        outfile << patient->getPatientId() << "," << patient->getPatientName() << "," << patient->getPatientDob() << endl;
+        if (!outfile) {
+            cerr << "Error in opening the file" << endl;
+            return;
+        }
+        outfile << patient->getPatientId() << "," << patient->getPatientName() << "," << patient->getPatientDob() << "," << patient->getPatientGender() << endl;
         outfile.close();
+        cout << "Patient data saved to the file." << endl;
     }
+
     // load patients and display them from the file where saved
     void loadPatientsFromFile() {
         ifstream infile;
         infile.open("patients.txt");
         if (!infile) {
-            cout << "Error in opening the file" << endl;
+            cout << "Error in opening the file." << endl;
             return;
         }
-        int patient_id;
-        string name;
-        string dob;
-        string gender;
-        while (infile >> patient_id >> name >> dob >> gender) {
-            PatientsLL* patient = new PatientsLL(patient_id, name, dob, gender);
+        string line;
+        while (getline(infile, line)) {
+            istringstream ss(line);
+            string id, name, dob, gender;
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, dob, ',');
+            getline(ss, gender, ',');
+            PatientsLL* patient = new PatientsLL(stoi(id), name, dob, gender);
             addPatient(patient);
         }
-        infile.close();
     }
+
     // display patients
     void displayPatients() {
-
         PatientsLL* temp = head;
-        int i = 1;
         while (temp != nullptr) {
-            cout << "Patient" << "ID:" << temp->getPatientId() << "," << "Name:" << temp->getPatientName() << "," << "Age:" << temp->getPatientDob() << endl;
+            cout << "Patient" << " ID: " << temp->getPatientId() << ", " << "Name: " << temp->getPatientName() << ", " << "DOB: " << temp->getPatientDob() << ", " << "Gender: " << temp->getPatientGender() << endl;
             temp = temp->next;
-            i++;
-
         }
-        cout << "---------------------" << endl;
-}
+    }
 };
+
+
 class DoctorsList {
 public:
     DoctorsLL* head;
@@ -173,6 +177,7 @@ public:
         }
         outfile << doctor->getDoctorId() << "," << doctor->getDoctorName() << "," << doctor->getDoctorSpecialization() << endl;
         outfile.close();
+        cout << "Doctor data saved to the file" << endl;
     }
     // read doctor data from the file
     void readDoctorDataFromFile() {
@@ -245,6 +250,7 @@ public:
 
         outfile << appointment->getAppointmentId() << "," << appointment->getPatientId() << "," << appointment->getDoctorId() << "," << appointment->getAppointmentDate() << "," << appointment->getAppointmentDate() << endl;
         outfile.close();
+        cout << "Appointment saved successfully" << endl;
     }
     // read appointment data from the file
     void readAppointmentDataFromFile() {
@@ -309,13 +315,13 @@ int main() {
                 string gender;
                 cout << "PATIENT REGISTRATION" << endl;
                 cout << "------------------------" << endl;
-                cout << "ID:" << endl;
+                cout << "ID: ";
                 cin >> patient_id;
-                cout << "NAME:" << endl;
+                cout << "NAME: ";
                 cin >> name;
-                cout << "DOB:" << endl;
+                cout << "DOB: ";
                 cin >> dob;
-                cout << "GENDER:" << endl;
+                cout << "GENDER: ";
                 cin >> gender;
                 cin.ignore();
                 if (patientsList.validatePatientInput( patient_id, name, dob, gender)) {
@@ -334,9 +340,9 @@ int main() {
                 cout << "ID:" << endl;
                 cin >> doctor_id;
                 cout << "NAME:" << endl;
-                getline(cin, name);
+                cin >> name ;
                 cout << "SPECIALIZATION:" << endl;
-                getline(cin, specialization);
+                cin >> specialization;
                 cin.ignore();
                 if (doctorsList.validateDoctorInput(doctor_id, name, specialization)) {
                     DoctorsLL* doctor = new DoctorsLL(doctor_id, name, specialization);
@@ -354,13 +360,13 @@ int main() {
                 cout << "------------------------" << endl;
                 cout << "ID:" << endl;
                 cin >> appointment_id;
-                cout << "PATIENT ID:" << endl;
+                cout << "PATIENT ID:" ;
                 cin >> patient_id;
-                cout << "DOCTOR ID:" << endl;
+                cout << "DOCTOR ID:" ;
                 cin >> doctor_id;
-                cout << "DATE:" << endl;
+                cout << "DATE:" ;
                 cin.ignore(); 
-                getline(cin, appointment_date);
+                cin >> appointment_date;
                 if (appointmentsList.validateAppointmentInput(appointment_id, patient_id, doctor_id,appointment_date)) {
                     Appointments* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
                     appointmentsList.addAppointment(appointment);
@@ -370,16 +376,19 @@ int main() {
             case 4: {
               // display patients
                 patientsList.displayPatients();
+                displayMenu();
                 break;
             };
             case 5: {
                 // display doctors
                 doctorsList.displayDoctors();
+                displayMenu();
                 break;
             };
             case 6: {
                 // display appointments
                 appointmentsList.displayAppointments();
+                displayMenu();
                 break;
             };
             case 7: {
@@ -389,6 +398,9 @@ int main() {
             };
             default:{
                 cout << "Invalid choice" << endl;
+                displayMenu();
+                break;
+            
             };
         }
     }
