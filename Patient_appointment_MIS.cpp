@@ -81,7 +81,6 @@ public:
     }
 
 // add patient
-    // add patient
     void addPatient(PatientsLL* patient) {
         if (head == nullptr) {
             head = patient;
@@ -95,7 +94,7 @@ public:
     }
 
     // save created patient to the file
-    void savePatientToFile(PatientsLL* patient) {
+    static void savePatientToFile(PatientsLL* patient) {
         ofstream outfile;
         outfile.open("patients.txt", ios::app);
         if (!outfile) {
@@ -123,7 +122,7 @@ public:
             getline(ss, name, ',');
             getline(ss, dob, ',');
             getline(ss, gender, ',');
-            PatientsLL* patient = new PatientsLL(stoi(id), name, dob, gender);
+            auto* patient = new PatientsLL(stoi(id), name, dob, gender);
             addPatient(patient);
         }
     }
@@ -132,7 +131,7 @@ public:
     void displayPatients() {
         PatientsLL* temp = head;
         while (temp != nullptr) {
-            cout << "Patient" << " ID: " << temp->getPatientId() << ", " << "Name: " << temp->getPatientName() << ", " << "DOB: " << temp->getPatientDob() << ", " << "Gender: " << temp->getPatientGender() << endl;
+            cout << "Patient" << " ID:" << temp->getPatientId() << ", " << "Name: " << temp->getPatientName() << ", " << "DOB: " << temp->getPatientDob() << ", " << "Gender: " << temp->getPatientGender() << endl;
             temp = temp->next;
         }
     }
@@ -168,7 +167,7 @@ public:
         }
     }
     // save created doctor to the file
-    void saveDoctorToFile(DoctorsLL* doctor) {
+    static void saveDoctorToFile(DoctorsLL* doctor) {
         ofstream outfile;
         outfile.open("doctors.txt", ios::app);
         if (!outfile) {
@@ -187,24 +186,25 @@ public:
             cout << "Error in opening the file" << endl;
             return;
         }
-        int doctor_id;
-        string name, specialization;
-        while (infile >> doctor_id >> name >> specialization) {
-            DoctorsLL* doctor = new DoctorsLL(doctor_id, name, specialization);
+       string line;
+        while (getline(infile, line)) {
+            istringstream ss(line);
+            string id, name, specialization;
+            getline(ss, id, ',');
+            getline(ss, name, ',');
+            getline(ss, specialization, ',');
+            auto* doctor = new DoctorsLL(stoi(id), name, specialization);
             addDoctor(doctor);
         }
-        infile.close();
     }
    
     // display doctors
-    void displayDoctors() {
+    void displayDoctors() const {
 
         DoctorsLL* temp = head;
-        int i = 1;
         while (temp != nullptr) {
             cout << "Doctor" << "ID:" << temp->getDoctorId() << "," << "Name:" << temp->getDoctorName() << "," << "Specialization:" << temp->getDoctorSpecialization() << endl;
             temp = temp->next;
-            i++;
 
         }
         cout << "---------------------" << endl;
@@ -227,17 +227,57 @@ public:
             return false;
         }
     }
-// add appointment
+// check existence of patient and doctor
+    bool checkPatientAndDoctorExistence(int patient_id, int doctor_id, PatientsList& patientsList, DoctorsList& doctorsList) {
+        PatientsLL* tempPatient = patientsList.head;
+        bool patientExists = false;
+        while (tempPatient != nullptr) {
+            if (tempPatient->getPatientId() == patient_id) {
+                patientExists = true;
+                break;
+            }
+            tempPatient = tempPatient->next;
+        }
+        if (!patientExists) {
+            cout << "Patient with ID " << patient_id << " does not exist." << endl;
+            return false;
+        }
+
+        DoctorsLL* tempDoctor = doctorsList.head;
+        bool doctorExists = false;
+        while (tempDoctor != nullptr) {
+            if (tempDoctor->getDoctorId() == doctor_id) {
+                doctorExists = true;
+                break;
+            }
+            tempDoctor = tempDoctor->next;
+        }
+        if (!doctorExists) {
+            cout << "Doctor with ID " << doctor_id << " does not exist." << endl;
+            return false;
+        }
+        return true;
+    }
+// if patient and doctor exist add appointment
+    void addAppointment(int appointment_id, int patient_id, int doctor_id, string appointment_date, PatientsList& patientsList, DoctorsList& doctorsList) {
+        if (!checkPatientAndDoctorExistence(patient_id, doctor_id, patientsList, doctorsList)) {
+            return;
+        }
+        auto* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
+        addAppointment(appointment);
+        saveAppointmentToFile(appointment);
+    }
+    // add appointment to the list
     void addAppointment(Appointments* appointment) {
         if (head == nullptr) {
             head = appointment;
-        } else {
-            Appointments* temp = head;
-            while (temp->next != nullptr) {
-                temp = temp->next;
-            }
-            temp->next = appointment;
+            return;
         }
+        Appointments* temp = head;
+        while (temp->next != nullptr) {
+            temp = temp->next;
+        }
+        temp->next = appointment;
     }
   // save created appointment to the file 
     void saveAppointmentToFile(Appointments* appointment) {
@@ -260,13 +300,17 @@ public:
             cout << "Error in opening the file" << endl;
             return;
         }
-        int appointment_id, patient_id, doctor_id;
-        string appointment_date;
-        while (infile >> appointment_id >> patient_id >> doctor_id >> appointment_date) {
-            Appointments* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
+      string line;
+        while (getline(infile, line)) {
+            istringstream ss(line);
+            string id, patient_id, doctor_id, date;
+            getline(ss, id, ',');
+            getline(ss, patient_id, ',');
+            getline(ss, doctor_id, ',');
+            getline(ss, date, ',');
+            auto* appointment = new Appointments(stoi(id), stoi(patient_id), stoi(doctor_id), date);
             addAppointment(appointment);
         }
-        infile.close();
     }
     // display appointments
     void displayAppointments() {
@@ -276,7 +320,7 @@ public:
         while (temp != nullptr) {
             cout << "Appointment" << "ID:" << temp->getAppointmentId() << "," << "Date:" << temp->getAppointmentDate() << endl;
             temp = temp->next;
-            i++;
+        
 
         }
         cout << "---------------------" << endl;
@@ -324,10 +368,11 @@ int main() {
                 cout << "GENDER: ";
                 cin >> gender;
                 cin.ignore();
-                if (patientsList.validatePatientInput( patient_id, name, dob, gender)) {
+
                     PatientsLL* patient = new PatientsLL(patient_id, name, dob, gender);
                     patientsList.addPatient(patient);
-                }
+                    cout << "Patient registered successfully" << endl;
+
                 break;
             };
             case 2: {
@@ -337,17 +382,16 @@ int main() {
                 string name;
                 cout << "DOCTOR REGISTRATION" << endl;
                 cout << "------------------------" << endl;
-                cout << "ID:" << endl;
+                cout << "ID: ";
                 cin >> doctor_id;
-                cout << "NAME:" << endl;
+                cout << "NAME: ";
                 cin >> name ;
-                cout << "SPECIALIZATION:" << endl;
+                cout << "SPECIALIZATION: ";
                 cin >> specialization;
                 cin.ignore();
-                if (doctorsList.validateDoctorInput(doctor_id, name, specialization)) {
                     DoctorsLL* doctor = new DoctorsLL(doctor_id, name, specialization);
                     doctorsList.addDoctor(doctor);
-                }
+
                 break;
             };
             case 3: {
@@ -360,17 +404,16 @@ int main() {
                 cout << "------------------------" << endl;
                 cout << "ID:" << endl;
                 cin >> appointment_id;
-                cout << "PATIENT ID:" ;
+                cout << "PATIENT ID: " ;
                 cin >> patient_id;
-                cout << "DOCTOR ID:" ;
+                cout << "DOCTOR ID: " ;
                 cin >> doctor_id;
-                cout << "DATE:" ;
+                cout << "DATE: " ;
                 cin.ignore(); 
                 cin >> appointment_date;
-                if (appointmentsList.validateAppointmentInput(appointment_id, patient_id, doctor_id,appointment_date)) {
                     Appointments* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
                     appointmentsList.addAppointment(appointment);
-                }
+
                 break;
             };
             case 4: {
