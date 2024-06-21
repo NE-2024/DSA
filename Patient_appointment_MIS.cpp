@@ -85,7 +85,7 @@ public:
         }
         return true;
     }
-
+// adding patient
     void addPatient(PatientsLL* patient) {
         if (head == nullptr) {
             head = patient;
@@ -97,7 +97,7 @@ public:
             temp->next = patient;
         }
     }
-
+// saving patient to file
     static void savePatientToFile(PatientsLL* patient) {
         ofstream outfile;
         outfile.open("patients.txt", ios::app);
@@ -109,7 +109,7 @@ public:
         outfile.close();
         cout << "Patient data saved to the file." << endl;
     }
-
+// loading patients from the file
     void loadPatientsFromFile() {
         ifstream infile;
         infile.open("patients.txt");
@@ -129,7 +129,7 @@ public:
             addPatient(patient);
         }
     }
-
+// display patients
     void displayPatients() {
         PatientsLL* temp = head;
         while (temp != nullptr) {
@@ -160,7 +160,7 @@ public:
         }
         return true;
     }
-
+// Creating a doctor
     void addDoctor(DoctorsLL* doctor) {
         if (head == nullptr) {
             head = doctor;
@@ -172,7 +172,7 @@ public:
             temp->next = doctor;
         }
     }
-
+// Saving the doctor to the file
     static void saveDoctorToFile(DoctorsLL* doctor) {
         ofstream outfile;
         outfile.open("doctors.txt", ios::app);
@@ -184,7 +184,7 @@ public:
         outfile.close();
         cout << "Doctor data saved to the file." << endl;
     }
-
+// read the doctor from the file
     void readDoctorDataFromFile() {
         ifstream infile;
         infile.open("doctors.txt");
@@ -203,7 +203,7 @@ public:
             addDoctor(doctor);
         }
     }
-
+// displaying doctors
     void displayDoctors() const {
         DoctorsLL* temp = head;
         while (temp != nullptr) {
@@ -231,7 +231,7 @@ public:
         }
         return true;
     }
-
+// Check whether the patient and doctor exists
     bool checkPatientAndDoctorExistence(int patient_id, int doctor_id, PatientsList& patientsList, DoctorsList& doctorsList) {
         PatientsLL* tempPatient = patientsList.head;
         bool patientExists = false;
@@ -262,7 +262,7 @@ public:
         }
         return true;
     }
-
+// Create an appointment
     void addAppointment(Appointments* appointment) {
         if (head == nullptr) {
             head = appointment;
@@ -274,7 +274,7 @@ public:
         }
         temp->next = appointment;
     }
-
+// save appointment from the file
     void saveAppointmentToFile(Appointments* appointment) {
         ofstream outfile;
         outfile.open("appointments.txt", ios::app);
@@ -287,7 +287,7 @@ public:
         outfile.close();
         cout << "Appointment saved successfully" << endl;
     }
-
+// Create appointment
     void addAppointment(int appointment_id, int patient_id, int doctor_id, const string& appointment_date, PatientsList& patientsList, DoctorsList& doctorsList) {
         if (!validateAppointmentInput(appointment_id, patient_id, doctor_id, appointment_date)) {
             cerr << "Invalid input. Appointment not created." << endl;
@@ -303,7 +303,7 @@ public:
         addAppointment(appointment);
         saveAppointmentToFile(appointment);
     }
-
+// Read appointments from the file
     void readAppointmentDataFromFile() {
         ifstream infile;
         infile.open("appointments.txt");
@@ -333,7 +333,7 @@ public:
         cout << "---------------------" << endl;
     }
 };
-
+// The menu
 void displayMenu() {
     cout << "Menu:" << endl;
     cout << "1. Register a patient" << endl;
