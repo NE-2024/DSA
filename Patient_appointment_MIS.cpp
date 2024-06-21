@@ -1,9 +1,8 @@
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-
+#include <regex>
 
 using namespace std;
 
@@ -15,8 +14,8 @@ public:
     string gender;
     PatientsLL* next;
 
-    PatientsLL() : patient_id(0), name(""),dob(""),gender(""), next(nullptr) {}
-    PatientsLL(int patient_id, string name, string dob, string gender) : patient_id(patient_id), name(name),dob(dob),gender(gender), next(nullptr) {}
+    PatientsLL() : patient_id(0), name(""), dob(""), gender(""), next(nullptr) {}
+    PatientsLL(int patient_id, string name, string dob, string gender) : patient_id(patient_id), name(name), dob(dob), gender(gender), next(nullptr) {}
 
     int getPatientId() const { return patient_id; }
     string getPatientName() const { return name; }
@@ -24,7 +23,7 @@ public:
     string getPatientGender() const { return gender; }
 };
 
-class DoctorsLL{
+class DoctorsLL {
 public:
     int doctor_id;
     string name;
@@ -32,55 +31,61 @@ public:
     DoctorsLL* next;
 
     DoctorsLL(int doctor_id, string name, string specialization) :
-            doctor_id(doctor_id), name(name),
-            specialization(specialization), next(nullptr) {}
+        doctor_id(doctor_id), name(name),
+        specialization(specialization), next(nullptr) {}
 
     int getDoctorId() const { return doctor_id; }
     string getDoctorName() const { return name; }
     string getDoctorSpecialization() const { return specialization; }
 };
-    class Appointments {
-    public:
-        int appointment_id;
-        PatientsLL * patient_id;
-        DoctorsLL * doctor_id;
-        string appointment_date;
-        Appointments * next;
 
-        Appointments(int appointment_id, int patient_id, int doctor_id, string appointment_date):
-                appointment_id(appointment_id),appointment_date(appointment_date),
-               patient_id(nullptr),doctor_id(nullptr), next(nullptr){}
+class Appointments {
+public:
+    int appointment_id;
+    PatientsLL* patient_id;
+    DoctorsLL* doctor_id;
+    string appointment_date;
+    Appointments* next;
 
+    Appointments(int appointment_id, int patient_id, int doctor_id, string appointment_date) :
+        appointment_id(appointment_id), appointment_date(appointment_date),
+        patient_id(nullptr), doctor_id(nullptr), next(nullptr) {}
 
-        int getAppointmentId() const { return appointment_id; }
-        string getAppointmentDate() const { return appointment_date; }
-        int getPatientId() const { return patient_id->getPatientId(); }
-        int getDoctorId() const { return doctor_id->getDoctorId(); }
+    int getAppointmentId() const { return appointment_id; }
+    string getAppointmentDate() const { return appointment_date; }
+    int getPatientId() const { return patient_id->getPatientId(); }
+    int getDoctorId() const { return doctor_id->getDoctorId(); }
 
-        void setPatientId(PatientsLL * patient_id) { this->patient_id = patient_id; }
-        void setDoctorId(DoctorsLL * doctor_id) { this->doctor_id = doctor_id; }
-
-        };
-
+    void setPatientId(PatientsLL* patient_id) { this->patient_id = patient_id; }
+    void setDoctorId(DoctorsLL* doctor_id) { this->doctor_id = doctor_id; }
+};
 
 class PatientsList {
 public:
     PatientsLL* head;
 
     PatientsList() : head(nullptr) {}
-// validate patient input data type
-    bool validatePatientInput(int& patient_id, string& name, string& dob, string& gender) {
+
+    bool validatePatientInput(int patient_id, const string& name, const string& dob, const string& gender) {
         if (patient_id <= 0) {
-            cout << "Invalid patient ID. Please enter a positive integer." << endl;
+            cerr << "Invalid patient ID. Please enter a positive integer." << endl;
             return false;
         }
-        if (name.empty() || dob.empty() || gender.empty()) {
-            cout << "Invalid, No field can be empty. Please enter required data" << endl;
+        if (name.empty() || !regex_match(name, regex("^[A-Za-z ]+$"))) {
+            cerr << "Invalid name. Please enter a valid name without numbers or special characters." << endl;
             return false;
         }
+        if (dob.empty() || !regex_match(dob, regex("^\\d{4}/\\d{2}/\\d{2}$"))) {
+            cerr << "Invalid date of birth. Please enter the date in the format yyyy/mm/dd." << endl;
+            return false;
+        }
+        if (gender.empty() || (gender != "Male" && gender != "Female")) {
+            cerr << "Invalid gender. Please enter either 'Male' or 'Female'." << endl;
+            return false;
+        }
+        return true;
     }
 
-// add patient
     void addPatient(PatientsLL* patient) {
         if (head == nullptr) {
             head = patient;
@@ -93,7 +98,6 @@ public:
         }
     }
 
-    // save created patient to the file
     static void savePatientToFile(PatientsLL* patient) {
         ofstream outfile;
         outfile.open("patients.txt", ios::app);
@@ -106,7 +110,6 @@ public:
         cout << "Patient data saved to the file." << endl;
     }
 
-    // load patients and display them from the file where saved
     void loadPatientsFromFile() {
         ifstream infile;
         infile.open("patients.txt");
@@ -127,34 +130,37 @@ public:
         }
     }
 
-    // display patients
     void displayPatients() {
         PatientsLL* temp = head;
         while (temp != nullptr) {
-            cout << "Patient" << " ID:" << temp->getPatientId() << ", " << "Name: " << temp->getPatientName() << ", " << "DOB: " << temp->getPatientDob() << ", " << "Gender: " << temp->getPatientGender() << endl;
+            cout << "Patient ID: " << temp->getPatientId() << ", Name: " << temp->getPatientName() << ", DOB: " << temp->getPatientDob() << ", Gender: " << temp->getPatientGender() << endl;
             temp = temp->next;
         }
     }
 };
-
 
 class DoctorsList {
 public:
     DoctorsLL* head;
 
     DoctorsList() : head(nullptr) {}
-    // validate doctor input data type
-    bool validateDoctorInput(int& doctor_id, string& name, string& specialization) {
+
+    bool validateDoctorInput(int doctor_id, const string& name, const string& specialization) {
         if (doctor_id <= 0) {
-            cout << "Invalid doctor ID. Please enter a positive integer." << endl;
+            cerr << "Invalid doctor ID. Please enter a positive integer." << endl;
             return false;
         }
-        if (name.empty() || specialization.empty()) {
-            cout << "Invalid, No field can be empty. Please enter required data" << endl;
+        if (name.empty() || !regex_match(name, regex("^[A-Za-z ]+$"))) {
+            cerr << "Invalid name. Please enter a valid name without numbers or special characters." << endl;
             return false;
         }
+        if (specialization.empty() || !regex_match(specialization, regex("^[A-Za-z ]+$"))) {
+            cerr << "Invalid specialization. Please enter a valid specialization without numbers or special characters." << endl;
+            return false;
+        }
+        return true;
     }
-// add doctor
+
     void addDoctor(DoctorsLL* doctor) {
         if (head == nullptr) {
             head = doctor;
@@ -166,27 +172,27 @@ public:
             temp->next = doctor;
         }
     }
-    // save created doctor to the file
+
     static void saveDoctorToFile(DoctorsLL* doctor) {
         ofstream outfile;
         outfile.open("doctors.txt", ios::app);
         if (!outfile) {
-            cout << "Error in opening the file" << endl;
+            cerr << "Error in opening the file" << endl;
             return;
         }
         outfile << doctor->getDoctorId() << "," << doctor->getDoctorName() << "," << doctor->getDoctorSpecialization() << endl;
         outfile.close();
-        cout << "Doctor data saved to the file" << endl;
+        cout << "Doctor data saved to the file." << endl;
     }
-    // read doctor data from the file
+
     void readDoctorDataFromFile() {
         ifstream infile;
         infile.open("doctors.txt");
         if (!infile) {
-            cout << "Error in opening the file" << endl;
+            cout << "Error in opening the file." << endl;
             return;
         }
-       string line;
+        string line;
         while (getline(infile, line)) {
             istringstream ss(line);
             string id, name, specialization;
@@ -197,18 +203,15 @@ public:
             addDoctor(doctor);
         }
     }
-   
-    // display doctors
-    void displayDoctors() const {
 
+    void displayDoctors() const {
         DoctorsLL* temp = head;
         while (temp != nullptr) {
-            cout << "Doctor" << "ID:" << temp->getDoctorId() << "," << "Name:" << temp->getDoctorName() << "," << "Specialization:" << temp->getDoctorSpecialization() << endl;
+            cout << "Doctor ID: " << temp->getDoctorId() << ", Name: " << temp->getDoctorName() << ", Specialization: " << temp->getDoctorSpecialization() << endl;
             temp = temp->next;
-
         }
         cout << "---------------------" << endl;
-    };
+    }
 };
 
 class AppointmentsList {
@@ -216,18 +219,19 @@ public:
     Appointments* head;
 
     AppointmentsList() : head(nullptr) {}
-    // validate appointment input data type
-    bool validateAppointmentInput(int& appointment_id, int& patient_id, int& doctor_id, string& appointment_date) {
+
+    bool validateAppointmentInput(int appointment_id, int patient_id, int doctor_id, const string& appointment_date) {
         if (appointment_id <= 0) {
-            cout << "Invalid appointment ID. Please enter a positive integer." << endl;
+            cerr << "Invalid appointment ID. Please enter a positive integer." << endl;
             return false;
         }
-        if (appointment_date.empty()) {
-            cout << "Invalid, No field can be empty. Please enter required data" << endl;
+        if (appointment_date.empty() || !regex_match(appointment_date, regex("^\\d{4}/\\d{2}/\\d{2}$"))) {
+            cerr << "Invalid date. Please enter the date in the format yyyy/mm/dd." << endl;
             return false;
         }
+        return true;
     }
-// check existence of patient and doctor
+
     bool checkPatientAndDoctorExistence(int patient_id, int doctor_id, PatientsList& patientsList, DoctorsList& doctorsList) {
         PatientsLL* tempPatient = patientsList.head;
         bool patientExists = false;
@@ -239,7 +243,7 @@ public:
             tempPatient = tempPatient->next;
         }
         if (!patientExists) {
-            cout << "Patient with ID " << patient_id << " does not exist." << endl;
+            cerr << "Patient with ID " << patient_id << " does not exist." << endl;
             return false;
         }
 
@@ -253,12 +257,12 @@ public:
             tempDoctor = tempDoctor->next;
         }
         if (!doctorExists) {
-            cout << "Doctor with ID " << doctor_id << " does not exist." << endl;
+            cerr << "Doctor with ID " << doctor_id << " does not exist." << endl;
             return false;
         }
         return true;
     }
-    // add appointment to the list
+
     void addAppointment(Appointments* appointment) {
         if (head == nullptr) {
             head = appointment;
@@ -270,38 +274,44 @@ public:
         }
         temp->next = appointment;
     }
-    // save created appointment to the file
+
     void saveAppointmentToFile(Appointments* appointment) {
         ofstream outfile;
         outfile.open("appointments.txt", ios::app);
         if (!outfile) {
-            cout << "Error in opening the file" << endl;
+            cerr << "Error in opening the file" << endl;
             return;
         }
 
-        outfile << appointment->getAppointmentId() << "," << appointment->getPatientId() << "," << appointment->getDoctorId() << "," << appointment->getAppointmentDate() << "," << appointment->getAppointmentDate() << endl;
+        outfile << appointment->getAppointmentId() << "," << appointment->getPatientId() << "," << appointment->getDoctorId() << "," << appointment->getAppointmentDate() << endl;
         outfile.close();
         cout << "Appointment saved successfully" << endl;
     }
-// if patient and doctor exist add appointment
-    void addAppointment(int appointment_id, int patient_id, int doctor_id, string appointment_date, PatientsList& patientsList, DoctorsList& doctorsList) {
+
+    void addAppointment(int appointment_id, int patient_id, int doctor_id, const string& appointment_date, PatientsList& patientsList, DoctorsList& doctorsList) {
+        if (!validateAppointmentInput(appointment_id, patient_id, doctor_id, appointment_date)) {
+            cerr << "Invalid input. Appointment not created." << endl;
+            return;
+        }
+
         if (!checkPatientAndDoctorExistence(patient_id, doctor_id, patientsList, doctorsList)) {
             cerr << "Appointment not created. Patient or doctor does not exist." << endl;
+            return;
         }
+
         auto* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
         addAppointment(appointment);
         saveAppointmentToFile(appointment);
     }
 
-    // read appointment data from the file
     void readAppointmentDataFromFile() {
         ifstream infile;
         infile.open("appointments.txt");
         if (!infile) {
-            cout << "Error in opening the file" << endl;
+            cerr << "Error in opening the file" << endl;
             return;
         }
-      string line;
+        string line;
         while (getline(infile, line)) {
             istringstream ss(line);
             string id, patient_id, doctor_id, date;
@@ -313,20 +323,17 @@ public:
             addAppointment(appointment);
         }
     }
-    // display appointments
+
     void displayAppointments() {
-
         Appointments* temp = head;
-        int i = 1;
         while (temp != nullptr) {
-            cout << "Appointment" << "ID:" << temp->getAppointmentId() << "," << "Date:" << temp->getAppointmentDate() << endl;
+            cout << "Appointment ID: " << temp->getAppointmentId() << ", Date: " << temp->getAppointmentDate() << endl;
             temp = temp->next;
-        
-
         }
         cout << "---------------------" << endl;
     }
 };
+
 void displayMenu() {
     cout << "Menu:" << endl;
     cout << "1. Register a patient" << endl;
@@ -340,113 +347,134 @@ void displayMenu() {
 }
 
 int main() {
-
     PatientsList patientsList;
     DoctorsList doctorsList;
     AppointmentsList appointmentsList;
     int choice;
+
     displayMenu();
     while (true) {
         cout << "Enter your choice: " << endl;
-        cin >> choice;
-        cin.ignore();
+        while (!(cin >> choice)) {
+            cout << "Invalid input. Please enter an integer: ";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
 
         switch (choice) {
             case 1: {
-                // create patient
                 int patient_id;
-                string name;
-                string dob;
-                string gender;
+                string name, dob, gender;
+
                 cout << "PATIENT REGISTRATION" << endl;
                 cout << "------------------------" << endl;
                 cout << "ID: ";
-                cin >> patient_id;
-                cout << "NAME: ";
-                cin >> name;
-                cout << "DOB: ";
-                cin >> dob;
-                cout << "GENDER: ";
-                cin >> gender;
+                while (!(cin >> patient_id)) {
+                    cout << "Invalid input. Please enter a positive integer for ID: ";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
                 cin.ignore();
+                cout << "NAME: ";
+                getline(cin, name);
+                cout << "DOB: ";
+                getline(cin, dob);
+                cout << "GENDER: ";
+                getline(cin, gender);
 
+                if (patientsList.validatePatientInput(patient_id, name, dob, gender)) {
                     PatientsLL* patient = new PatientsLL(patient_id, name, dob, gender);
                     patientsList.addPatient(patient);
+                    PatientsList::savePatientToFile(patient);
                     cout << "Patient registered successfully" << endl;
+                }
 
                 break;
-            };
+            }
             case 2: {
-                // create doctor
                 int doctor_id;
-                string specialization;
-                string name;
+                string name, specialization;
+
                 cout << "DOCTOR REGISTRATION" << endl;
                 cout << "------------------------" << endl;
                 cout << "ID: ";
-                cin >> doctor_id;
-                cout << "NAME: ";
-                cin >> name ;
-                cout << "SPECIALIZATION: ";
-                cin >> specialization;
+                while (!(cin >> doctor_id)) {
+                    cout << "Invalid input. Please enter a positive integer for ID: ";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
                 cin.ignore();
+                cout << "NAME: ";
+                getline(cin, name);
+                cout << "SPECIALIZATION: ";
+                getline(cin, specialization);
+
+                if (doctorsList.validateDoctorInput(doctor_id, name, specialization)) {
                     DoctorsLL* doctor = new DoctorsLL(doctor_id, name, specialization);
                     doctorsList.addDoctor(doctor);
+                    DoctorsList::saveDoctorToFile(doctor);
+                    cout << "Doctor registered successfully" << endl;
+                }
 
                 break;
-            };
+            }
             case 3: {
-                // create appointment
-                int appointment_id;
-                int patient_id;
-                int doctor_id;
+                int appointment_id, patient_id, doctor_id;
                 string appointment_date;
+
                 cout << "APPOINTMENT REGISTRATION" << endl;
                 cout << "------------------------" << endl;
-                cout << "ID:" << endl;
-                cin >> appointment_id;
-                cout << "PATIENT ID: " ;
-                cin >> patient_id;
-                cout << "DOCTOR ID: " ;
-                cin >> doctor_id;
-                cout << "DATE: " ;
-                cin.ignore(); 
-                cin >> appointment_date;
-                    Appointments* appointment = new Appointments(appointment_id, patient_id, doctor_id, appointment_date);
-                    appointmentsList.addAppointment(appointment);
+                cout << "ID: ";
+                while (!(cin >> appointment_id)) {
+                    cout << "Invalid input. Please enter a positive integer for ID: ";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
+                cout << "PATIENT ID: ";
+                while (!(cin >> patient_id)) {
+                    cout << "Invalid input. Please enter a positive integer for Patient ID: ";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
+                cout << "DOCTOR ID: ";
+                while (!(cin >> doctor_id)) {
+                    cout << "Invalid input. Please enter a positive integer for Doctor ID: ";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
+                cin.ignore();
+                cout << "DATE (yyyy/mm/dd): ";
+                getline(cin, appointment_date);
+
+                if (appointmentsList.validateAppointmentInput(appointment_id, patient_id, doctor_id, appointment_date) &&
+                    appointmentsList.checkPatientAndDoctorExistence(patient_id, doctor_id, patientsList, doctorsList)) {
+                    appointmentsList.addAppointment(appointment_id, patient_id, doctor_id, appointment_date, patientsList, doctorsList);
+                    cout << "Appointment registered successfully" << endl;
+                }
 
                 break;
-            };
+            }
             case 4: {
-              // display patients
                 patientsList.displayPatients();
-                displayMenu();
                 break;
-            };
+            }
             case 5: {
-                // display doctors
                 doctorsList.displayDoctors();
-                displayMenu();
                 break;
-            };
+            }
             case 6: {
-                // display appointments
                 appointmentsList.displayAppointments();
-                displayMenu();
                 break;
-            };
+            }
             case 7: {
                 cout << "Exiting the program..." << endl;
-                exit(0);
-                break;
-            };
-            default:{
+                return 0;
+            }
+            default: {
                 cout << "Invalid choice" << endl;
-                displayMenu();
-                break;
-            
-            };
+            }
         }
+        displayMenu();
     }
     return 0;
 }
